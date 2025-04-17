@@ -1,0 +1,54 @@
+{
+    "provide me order details": "SELECT TOP 5 OrderID, ProductID, UnitPrice, Quantity, Discount FROM [Order Details] ORDER BY OrderID",
+    "show me order details": "SELECT TOP 5 OrderID, ProductID, UnitPrice, Quantity, Discount FROM [Order Details] ORDER BY OrderID",
+    "display order information": "SELECT TOP 5 OrderID, ProductID, UnitPrice, Quantity, Discount FROM [Order Details] ORDER BY OrderID",
+    
+    "list all customers": "SELECT * FROM Customers",
+    "show all customers": "SELECT * FROM Customers",
+    "get customer information": "SELECT * FROM Customers",
+    
+    "show the names and ids of all products": "SELECT ProductID, ProductName FROM Products",
+    "list product names and ids": "SELECT ProductID, ProductName FROM Products",
+    "get product information": "SELECT ProductID, ProductName FROM Products",
+    
+    "list all categories": "SELECT * FROM Categories",
+    "show all categories": "SELECT * FROM Categories",
+    "get category information": "SELECT * FROM Categories",
+    
+    "show all orders with customer ids": "SELECT OrderID, CustomerID FROM Orders",
+    "list orders and their customers": "SELECT OrderID, CustomerID FROM Orders",
+    "get order customer information": "SELECT OrderID, CustomerID FROM Orders",
+    
+    "list products with their category names": "SELECT Products.ProductName, Categories.CategoryName FROM Products JOIN Categories ON Products.CategoryID = Categories.CategoryID",
+    "show products and their categories": "SELECT Products.ProductName, Categories.CategoryName FROM Products JOIN Categories ON Products.CategoryID = Categories.CategoryID",
+    "get products with category information": "SELECT Products.ProductName, Categories.CategoryName FROM Products JOIN Categories ON Products.CategoryID = Categories.CategoryID",
+    
+    "get order details for order id 10248": "SELECT * FROM [Order Details] WHERE OrderID = 10248",
+    "show details for order 10248": "SELECT * FROM [Order Details] WHERE OrderID = 10248",
+    "find information about order 10248": "SELECT * FROM [Order Details] WHERE OrderID = 10248",
+    
+    "list all customers in germany": "SELECT * FROM Customers WHERE Country = 'Germany'",
+    "show german customers": "SELECT * FROM Customers WHERE Country = 'Germany'",
+    "get customers from germany": "SELECT * FROM Customers WHERE Country = 'Germany'",
+    
+    "show total quantity sold for each product": "SELECT ProductID, SUM(Quantity) AS TotalSold FROM [Order Details] GROUP BY ProductID",
+    "get product sales quantities": "SELECT ProductID, SUM(Quantity) AS TotalSold FROM [Order Details] GROUP BY ProductID",
+    "calculate total sales per product": "SELECT ProductID, SUM(Quantity) AS TotalSold FROM [Order Details] GROUP BY ProductID",
+    
+    "show order count for each customer": "SELECT CustomerID, COUNT(*) AS OrderCount FROM Orders GROUP BY CustomerID",
+    "get number of orders per customer": "SELECT CustomerID, COUNT(*) AS OrderCount FROM Orders GROUP BY CustomerID",
+    "calculate customer order frequency": "SELECT CustomerID, COUNT(*) AS OrderCount FROM Orders GROUP BY CustomerID",
+    
+    "find products with price greater than 50": "SELECT ProductID, ProductName, UnitPrice FROM Products WHERE UnitPrice > 50",
+    "show expensive products": "SELECT ProductID, ProductName, UnitPrice FROM Products WHERE UnitPrice > 50",
+    "list high-priced products": "SELECT ProductID, ProductName, UnitPrice FROM Products WHERE UnitPrice > 50",
+    
+    "get orders placed in 1997": "SELECT OrderID, OrderDate FROM Orders WHERE YEAR(OrderDate) = 1997",
+    "show 1997 orders": "SELECT OrderID, OrderDate FROM Orders WHERE YEAR(OrderDate) = 1997",
+    "find orders from 1997": "SELECT OrderID, OrderDate FROM Orders WHERE YEAR(OrderDate) = 1997",
+    
+    "list products with discontinued status": "SELECT ProductID, ProductName, Discontinued FROM Products WHERE Discontinued = 1",
+    "show discontinued products": "SELECT ProductID, ProductName, Discontinued FROM Products WHERE Discontinued = 1",
+    "get products no longer available": "SELECT ProductID, ProductName, Discontinued FROM Products WHERE Discontinued = 1"
+}
+  
