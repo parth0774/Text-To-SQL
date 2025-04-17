@@ -102,7 +102,7 @@ You will call the appropriate tool to execute the query after running this check
 query_check_prompt = ChatPromptTemplate.from_messages(
     [("system", query_check_system), ("placeholder", "{messages}")]
 )
-query_check = query_check_prompt | ChatOpenAI(model="gpt-4", temperature=0).bind_tools(
+query_check = query_check_prompt | ChatOpenAI(model="gpt-4o-mini", temperature=0).bind_tools(
     [db_query_tool], tool_choice="required"
 )
 

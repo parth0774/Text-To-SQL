@@ -1,1 +1,2 @@
-2025-04-16 22:15:30,563 - INFO - Initializing database connection...
+2025-04-16 22:18:41,540 - INFO - Log history cleared.
+2025-04-16 22:18:41,541 - INFO - 127.0.0.1 - - [16/Apr/2025 22:18:41] "POST /clear_history HTTP/1.1" 200 -
