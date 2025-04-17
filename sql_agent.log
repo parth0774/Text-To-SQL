@@ -1,0 +1,13 @@
+2025-04-17 01:55:37,623 - INFO - Log history cleared.
+2025-04-17 01:55:37,624 - INFO - 127.0.0.1 - - [17/Apr/2025 01:55:37] "POST /clear_history HTTP/1.1" 200 -
+2025-04-17 01:55:42,750 - INFO - Processing question: how many customers i have
+2025-04-17 01:55:44,183 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-04-17 01:55:45,746 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-04-17 01:55:47,452 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-04-17 01:55:48,703 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-04-17 01:55:50,082 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-04-17 01:55:50,096 - INFO - 127.0.0.1 - - [17/Apr/2025 01:55:50] "POST /query HTTP/1.1" 200 -
+2025-04-17 01:56:19,261 - INFO -  * Detected change in 'c:\\Users\\parth\\Desktop\\Projects\\Query-To-SQL\\Query-To-SQL\\Text_To_SQL_Langraph.py', reloading
+2025-04-17 01:56:19,262 - INFO -  * Detected change in 'c:\\Users\\parth\\Desktop\\Projects\\Query-To-SQL\\Query-To-SQL\\Text_To_SQL_Langraph.py', reloading
+2025-04-17 01:56:19,262 - INFO -  * Detected change in 'c:\\Users\\parth\\Desktop\\Projects\\Query-To-SQL\\Query-To-SQL\\Text_To_SQL_Langraph.py', reloading
+2025-04-17 01:56:19,874 - INFO -  * Restarting with watchdog (windowsapi)
