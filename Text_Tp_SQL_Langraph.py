@@ -24,6 +24,12 @@ db = SQLDatabase.from_uri(DB_CONNECTION_STRING)
 logging.info(f"Database dialect: {db.dialect}")
 logging.info(f"Available tables: {db.get_usable_table_names()}")
 
+toolkit = SQLDatabaseToolkit(db=db, llm=ChatOpenAI(model="gpt-4"))
+tools = toolkit.get_tools()
+
+list_tables_tool = next(tool for tool in tools if tool.name == "sql_db_list_tables")
+get_schema_tool = next(tool for tool in tools if tool.name == "sql_db_schema")
+
 def create_tool_node_with_fallback(tools: list) -> RunnableWithFallbacks[Any, dict]:
     return ToolNode(tools).with_fallbacks(
         [RunnableLambda(handle_tool_error)], exception_key="error"
