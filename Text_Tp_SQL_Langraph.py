@@ -48,6 +48,20 @@ def handle_tool_error(state) -> dict:
         ]
     }
 
+@tool
+def db_query_tool(query: str) -> str:
+    """
+    Execute a SQL query against the database and get back the result.
+    If the query is not correct, an error message will be returned.
+    If an error is returned, rewrite the query, check the query, and try again.
+    """
+    logging.info(f"Executing query: {query}")
+    result = db.run_no_throw(query)
+    if not result:
+        logging.error("Query execution failed")
+        return "Error: Query failed. Please rewrite your query and try again."
+    logging.info("Query executed successfully")
+    return result
 
 
 
