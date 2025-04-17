@@ -63,6 +63,28 @@ def db_query_tool(query: str) -> str:
     logging.info("Query executed successfully")
     return result
 
+query_check_system = """You are a SQL expert with a strong attention to detail.
+Double check the SQL Server query for common mistakes, including:
+- Using NOT IN with NULL values
+- Using UNION when UNION ALL should have been used
+- Using BETWEEN for exclusive ranges
+- Data type mismatch in predicates
+- Properly quoting identifiers
+- Using the correct number of arguments for functions
+- Casting to the correct data type
+- Using the proper columns for joins
+- Using proper SQL Server syntax (e.g., TOP instead of LIMIT)
+
+If there are any of the above mistakes, rewrite the query. If there are no mistakes, just reproduce the original query.
+
+You will call the appropriate tool to execute the query after running this check."""
+
+query_check_prompt = ChatPromptTemplate.from_messages(
+    [("system", query_check_system), ("placeholder", "{messages}")]
+)
+query_check = query_check_prompt | ChatOpenAI(model="gpt-4", temperature=0).bind_tools(
+    [db_query_tool], tool_choice="required"
+)
 
 
 
