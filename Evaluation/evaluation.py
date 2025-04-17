@@ -250,10 +250,10 @@ def print_evaluation_report(results: Dict):
             print(f"Gold: {m['gold']}\n")
 
 if __name__ == "__main__":
-    with open('gold_queries.json', 'r') as f:
+    with open(r'C:\Users\parth\Desktop\Projects\Query-To-SQL\Query-To-SQL\Evaluation\gold_queries.json', 'r') as f:
         gold_queries = json.load(f)
     test_logs = []
-    with open('sql_log.json', 'r') as f:
+    with open(r'C:\Users\parth\Desktop\Projects\Query-To-SQL\Query-To-SQL\sql_log.json', 'r') as f:
         for line in f:
             if line.strip():
                 test_logs.append(json.loads(line))
