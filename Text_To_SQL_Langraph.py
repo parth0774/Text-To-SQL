@@ -3,6 +3,9 @@ import json
 from datetime import datetime
 from typing import Any, Union, Literal, Annotated
 from typing_extensions import TypedDict
+from langsmith import Client
+from langchain.callbacks.tracers import LangChainTracer
+from langchain.callbacks.manager import CallbackManager
 
 from langchain_community.utilities import SQLDatabase
 from langchain_community.agent_toolkits import SQLDatabaseToolkit
@@ -16,11 +19,30 @@ from langgraph.graph import END, StateGraph, START
 from langgraph.graph.message import add_messages
 from pydantic import BaseModel, Field
 
-from config import DB_CONNECTION_STRING, OPENAI_API_KEY
+from config import DB_CONNECTION_STRING, OPENAI_API_KEY, LANGSMITH_API_KEY, LANGSMITH_ENDPOINT, LANGSMITH_PROJECT
+
+# Set environment variables for LangSmith
+os.environ["LANGCHAIN_TRACING_V2"] = "true"
+os.environ["LANGCHAIN_ENDPOINT"] = LANGSMITH_ENDPOINT
+os.environ["LANGCHAIN_API_KEY"] = LANGSMITH_API_KEY
+os.environ["LANGCHAIN_PROJECT"] = LANGSMITH_PROJECT
 
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 
 SQL_LOG_FILE = 'sql_log.json'
+
+# Initialize LangSmith client with config values
+client = Client(
+    api_key=LANGSMITH_API_KEY,
+    api_url=LANGSMITH_ENDPOINT
+)
+
+# Configure LangSmith tracing
+tracer = LangChainTracer(
+    project_name=LANGSMITH_PROJECT
+)
+
+callback_manager = CallbackManager([tracer])
 
 def log_to_json(question: str, sql_query: str, answer: str, timestamp: str = None):
     if timestamp is None:

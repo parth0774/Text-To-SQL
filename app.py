@@ -3,6 +3,9 @@ from Text_To_SQL_Langraph import run_query
 import logging
 from datetime import datetime
 import os
+from langsmith import Client
+from langchain.callbacks.tracers import LangChainTracer
+from langchain.callbacks.manager import CallbackManager
 
 app = Flask(__name__)
 
@@ -16,6 +19,18 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
+
+client = Client(
+    api_key=os.getenv("LANGSMITH_API_KEY"),
+    api_url=os.getenv("LANGSMITH_ENDPOINT")
+)
+
+# Configure LangSmith tracing
+tracer = LangChainTracer(
+    project_name=os.getenv("LANGSMITH_PROJECT")
+)
+
+callback_manager = CallbackManager([tracer])
 
 @app.route('/')
 def index():

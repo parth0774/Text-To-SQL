@@ -11,6 +11,11 @@ OPENAI_API_KEY = "sk-proj-4ZD8v9odKq7UeQftRArjt1t-fhNRI-mofCD3j9RNF77xPA2R_z3ao3
 # Database connection string
 DB_CONNECTION_STRING = f"mssql+pymssql://{DB_CONFIG['username']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}/{DB_CONFIG['database']}"
 
+LANGSMITH_API_KEY="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"
+LANGSMITH_TRACING="true"
+LANGSMITH_ENDPOINT="https://api.smith.langchain.com"
+LANGSMITH_PROJECT="Text-SQL-Agent" 
+
 SCHEMA_INFO = """
 The database contains the following tables:
 
