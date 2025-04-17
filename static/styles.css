@@ -1,0 +1,60 @@
+/* Custom scrollbar for log box */
+#logBox::-webkit-scrollbar {
+    width: 8px;
+}
+
+#logBox::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+#logBox::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+#logBox::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Log message styling */
+.log-message {
+    margin-bottom: 8px;
+    padding: 4px;
+    border-radius: 4px;
+}
+
+.log-message.info {
+    color: #2563eb;
+}
+
+.log-message.error {
+    color: #dc2626;
+}
+
+.log-message.warning {
+    color: #d97706;
+}
+
+/* Result styling */
+#answer {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* Loading animation */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    border-top-color: #2563eb;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+} 
