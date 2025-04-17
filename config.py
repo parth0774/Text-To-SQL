@@ -7,8 +7,7 @@ DB_CONFIG = {
 }
 
 # OpenAI configuration
-OPENAI_API_KEY = "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"
-
+OPENAI_API_KEY = "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"
 # Database connection string
 DB_CONNECTION_STRING = f"mssql+pymssql://{DB_CONFIG['username']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}/{DB_CONFIG['database']}"
 
