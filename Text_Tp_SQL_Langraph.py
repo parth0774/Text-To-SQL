@@ -86,16 +86,11 @@ query_check = query_check_prompt | ChatOpenAI(model="gpt-4", temperature=0).bind
     [db_query_tool], tool_choice="required"
 )
 
-# Define the state for the agent
 class State(TypedDict):
     messages: Annotated[list[AnyMessage], add_messages]
 
-
-# Define a new graph
 workflow = StateGraph(State)
 
-
-# Add a node for the first tool call
 def first_tool_call(state: State) -> dict[str, list[AIMessage]]:
     return {
         "messages": [
@@ -114,9 +109,6 @@ def first_tool_call(state: State) -> dict[str, list[AIMessage]]:
 
 
 def model_check_query(state: State) -> dict[str, list[AIMessage]]:
-    """
-    Use this tool to double-check if your query is correct before executing it.
-    """
     logging.info("Validating query...")
     result = query_check.invoke({"messages": [state["messages"][-1]]})
     logging.info(f"Query validation result: {result}")
@@ -125,13 +117,11 @@ def model_check_query(state: State) -> dict[str, list[AIMessage]]:
 
 workflow.add_node("first_tool_call", first_tool_call)
 
-# Add nodes for the first two tools
 workflow.add_node(
     "list_tables_tool", create_tool_node_with_fallback([list_tables_tool])
 )
 workflow.add_node("get_schema_tool", create_tool_node_with_fallback([get_schema_tool]))
 
-# Add a node for a model to choose the relevant tables based on the question and available tables
 model_get_schema = ChatOpenAI(model="gpt-4", temperature=0).bind_tools(
     [get_schema_tool]
 )
@@ -142,15 +132,9 @@ workflow.add_node(
     },
 )
 
-
-# Describe a tool to represent the end state
 class SubmitFinalAnswer(BaseModel):
-    """Submit the final answer to the user based on the query results."""
-
     final_answer: str = Field(..., description="The final answer to the user")
 
-
-# Add a node for a model to generate a query based on the question and schema
 query_gen_system = """You are a SQL expert with a strong attention to detail.
 
 Given an input question, output a syntactically correct SQL Server query to run, then look at the results of the query and return the answer.
@@ -183,8 +167,6 @@ query_gen = query_gen_prompt | ChatOpenAI(model="gpt-4", temperature=0).bind_too
 
 def query_gen_node(state: State):
     message = query_gen.invoke(state)
-
-    # Sometimes, the LLM will hallucinate and call the wrong tool. We need to catch this and return an error message.
     tool_messages = []
     if message.tool_calls:
         for tc in message.tool_calls:
@@ -202,18 +184,13 @@ def query_gen_node(state: State):
 
 workflow.add_node("query_gen", query_gen_node)
 
-# Add a node for the model to check the query before executing it
 workflow.add_node("correct_query", model_check_query)
 
-# Add node for executing the query
 workflow.add_node("execute_query", create_tool_node_with_fallback([db_query_tool]))
 
-
-# Define a conditional edge to decide whether to continue or end the workflow
 def should_continue(state: State) -> Literal[END, "correct_query", "query_gen"]:
     messages = state["messages"]
     last_message = messages[-1]
-    # If there is a tool call, then we finish
     if getattr(last_message, "tool_calls", None):
         return END
     if last_message.content.startswith("Error:"):
@@ -221,8 +198,6 @@ def should_continue(state: State) -> Literal[END, "correct_query", "query_gen"]:
     else:
         return "correct_query"
 
-
-# Specify the edges between the nodes
 workflow.add_edge(START, "first_tool_call")
 workflow.add_edge("first_tool_call", "list_tables_tool")
 workflow.add_edge("list_tables_tool", "model_get_schema")
@@ -235,10 +210,42 @@ workflow.add_conditional_edges(
 workflow.add_edge("correct_query", "execute_query")
 workflow.add_edge("execute_query", "query_gen")
 
-# Compile the workflow into a runnable
 app = workflow.compile()
 
+def run_query(question: str):
+    logging.info(f"Processing question: {question}")
+    messages = app.invoke({"messages": [("user", question)]})
+    
+    final_message = messages["messages"][-1]
+    logging.info(f"Final message content: {final_message.content}")
+    
+    answer = None
 
+    if final_message.tool_calls:
+        logging.info("Tool calls found in final message")
+        answer = final_message.tool_calls[0]["args"]["final_answer"]
+    else:
+        logging.info("No tool calls found, returning content directly")
+        answer = final_message.content
+    
+    sql_query = None
+    for msg in messages["messages"]:
+        if hasattr(msg, 'tool_calls') and msg.tool_calls:
+            for call in msg.tool_calls:
+                if call["name"] == 'db_query_tool':
+                    sql_query = call["args"]["query"]
+                    break
+    
+    print(f"SQL Query: {sql_query}")
+    print(f"Answer: {answer}")
+    
+    return answer, final_message
+
+if __name__ == "__main__":
+    question = "provide me information on order details?"
+    logging.info(f"Starting query execution for question: {question}")
+    result = run_query(question)
+    logging.info("Query execution completed")
 
 
 
