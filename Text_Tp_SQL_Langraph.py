@@ -188,7 +188,17 @@ workflow.add_node("correct_query", model_check_query)
 
 workflow.add_node("execute_query", create_tool_node_with_fallback([db_query_tool]))
 
-def should_continue(state: State) -> Literal[END, "correct_query", "query_gen"]:
+def should_continue(state: State) -> Literal["END", "correct_query", "query_gen"]:
+    messages = state["messages"]
+    last_message = messages[-1]
+    if getattr(last_message, "tool_calls", None):
+        return "END"
+    if last_message.content.startswith("Error:"):
+        return "query_gen"
+    else:
+        return "correct_query"
+    
+def should_continue(state: State) -> str:
     messages = state["messages"]
     last_message = messages[-1]
     if getattr(last_message, "tool_calls", None):
