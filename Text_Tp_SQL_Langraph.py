@@ -4,12 +4,13 @@ import os
 import logging
 from datetime import datetime
 
-# Configure logging
+# Configure logging with a single log file
+LOG_FILE = 'sql_agent.log'
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler(f'sql_agent_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'),
+        logging.FileHandler(LOG_FILE),
         logging.StreamHandler()
     ]
 )
@@ -275,47 +276,56 @@ def run_query(question: str):
     Returns:
         tuple: (answer, final_message, logs) - The answer to the question, the final message, and the logs
     """
-    logging.info(f"Processing question: {question}")
-    messages = app.invoke({"messages": [("user", question)]})
-    
-    # Log the final message content
-    final_message = messages["messages"][-1]
-    logging.info(f"Final message content: {final_message.content}")
-    
-    # Initialize variables for answer and SQL query
-    answer = None
-    sql_query = None
-
-    if final_message.tool_calls:
-        logging.info("Tool calls found in final message")
-        answer = final_message.tool_calls[0]["args"]["final_answer"]
-    else:
-        logging.info("No tool calls found, returning content directly")
-        answer = final_message.content
-    
-    # Extract SQL query from logs
-    for msg in messages["messages"]:
-        if hasattr(msg, 'tool_calls') and msg.tool_calls:
-            for call in msg.tool_calls:
-                if call["name"] == 'db_query_tool':
-                    sql_query = call["args"]["query"]
-                    break
-    
-    # Format the answer to include the SQL query
-    formatted_answer = f"Answer: {answer}\n\nSQL Query:\n{sql_query}"
-    
-    # Get the current log file path
-    current_log_file = f'sql_agent_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'
-    
-    # Read the logs from the current log file
+    # Create a list to store logs
     logs = []
-    try:
-        with open(current_log_file, 'r') as log_file:
-            logs = log_file.readlines()
-    except Exception as e:
-        logging.error(f"Error reading log file: {str(e)}")
     
-    return formatted_answer, final_message, logs
+    try:
+        logging.info(f"Processing question: {question}")
+        messages = app.invoke({"messages": [("user", question)]})
+        
+        # Log the final message content
+        final_message = messages["messages"][-1]
+        logging.info(f"Final message content: {final_message.content}")
+        
+        # Initialize variables for answer and SQL query
+        answer = None
+        sql_query = None
+
+        if final_message.tool_calls:
+            logging.info("Tool calls found in final message")
+            answer = final_message.tool_calls[0]["args"]["final_answer"]
+        else:
+            logging.info("No tool calls found, returning content directly")
+            answer = final_message.content
+        
+        # Extract SQL query from logs
+        for msg in messages["messages"]:
+            if hasattr(msg, 'tool_calls') and msg.tool_calls:
+                for call in msg.tool_calls:
+                    if call["name"] == 'db_query_tool':
+                        sql_query = call["args"]["query"]
+                        break
+        
+        # Format the answer to include the SQL query
+        formatted_answer = f"Answer: {answer}\n\nSQL Query:\n{sql_query}"
+        
+        # Read the logs from the log file
+        try:
+            if os.path.exists(LOG_FILE):
+                with open(LOG_FILE, 'r') as log_file:
+                    logs = log_file.readlines()
+            else:
+                logging.warning(f"Log file {LOG_FILE} not found")
+        except Exception as e:
+            logging.error(f"Error reading log file: {str(e)}")
+            logs = [f"Error reading log file: {str(e)}"]
+        
+        return formatted_answer, final_message, logs
+    except Exception as e:
+        error_message = f"Error processing query: {str(e)}"
+        logging.error(error_message)
+        logs.append(error_message)
+        return error_message, None, logs
 
 if __name__ == "__main__":
     # Example usage

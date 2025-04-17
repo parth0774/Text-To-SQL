@@ -1,1 +1,17 @@
 2025-04-16 22:08:24,402 - INFO - Initializing database connection...
+2025-04-16 22:08:45,783 - INFO - Database dialect: mssql
+2025-04-16 22:08:45,783 - INFO - Available tables: ['Categories', 'CustomerCustomerDemo', 'CustomerDemographics', 'Customers', 'EmployeeTerritories', 'Employees', 'Order Details', 'Orders', 'Products', 'Region', 'Shippers', 'Suppliers', 'Territories', 'sysdiagrams']
+2025-04-16 22:08:50,959 - INFO - Starting query execution for question: provide me information on order details?
+2025-04-16 22:08:50,960 - INFO - Processing question: provide me information on order details?
+2025-04-16 22:08:52,712 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-04-16 22:09:05,785 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-04-16 22:09:05,794 - INFO - Validating query...
+2025-04-16 22:09:07,227 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-04-16 22:09:07,228 - INFO - Query validation result: content='' additional_kwargs={'tool_calls': [{'id': 'call_vdjWmBHGJStRWjp9QXqmbLzD', 'function': {'arguments': '{\n"query": "SELECT * FROM [Order Details]"\n}', 'name': 'db_query_tool'}, 'type': 'function'}], 'refusal': None} response_metadata={'token_usage': {'completion_tokens': 19, 'prompt_tokens': 510, 'total_tokens': 529, 'completion_tokens_details': {'accepted_prediction_tokens': 0, 'audio_tokens': 0, 'reasoning_tokens': 0, 'rejected_prediction_tokens': 0}, 'prompt_tokens_details': {'audio_tokens': 0, 'cached_tokens': 0}}, 'model_name': 'gpt-4-0613', 'system_fingerprint': None, 'id': 'chatcmpl-BN8yY0rrtjEFJL92nOXKNjoJbXuuK', 'finish_reason': 'stop', 'logprobs': None} id='run-50e2662a-e476-4ad9-a752-1dc6531e42d4-0' tool_calls=[{'name': 'db_query_tool', 'args': {'query': 'SELECT * FROM [Order Details]'}, 'id': 'call_vdjWmBHGJStRWjp9QXqmbLzD', 'type': 'tool_call'}] usage_metadata={'input_tokens': 510, 'output_tokens': 19, 'total_tokens': 529, 'input_token_details': {'audio': 0, 'cache_read': 0}, 'output_token_details': {'audio': 0, 'reasoning': 0}}
+2025-04-16 22:09:07,232 - INFO - Executing query: SELECT * FROM [Order Details]
+2025-04-16 22:09:07,468 - INFO - Query executed successfully
+2025-04-16 22:09:07,689 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-04-16 22:09:07,690 - INFO - Retrying request to /chat/completions in 0.472403 seconds
+2025-04-16 22:09:08,327 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2025-04-16 22:09:08,328 - INFO - Retrying request to /chat/completions in 0.814333 seconds
+2025-04-16 22:09:09,288 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
