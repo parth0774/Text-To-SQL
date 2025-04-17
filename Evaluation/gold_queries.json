@@ -49,6 +49,15 @@
     
     "list products with discontinued status": "SELECT ProductID, ProductName, Discontinued FROM Products WHERE Discontinued = 1",
     "show discontinued products": "SELECT ProductID, ProductName, Discontinued FROM Products WHERE Discontinued = 1",
-    "get products no longer available": "SELECT ProductID, ProductName, Discontinued FROM Products WHERE Discontinued = 1"
+    "get products no longer available": "SELECT ProductID, ProductName, Discontinued FROM Products WHERE Discontinued = 1",
+
+    "get all orders for a specific customer": "SELECT * FROM Orders WHERE CustomerID = 'ALFKI'",
+    "list all products in a specific category": "SELECT * FROM Products WHERE CategoryID = 1",
+    "get order details for a specific order": "SELECT * FROM [Order Details] WHERE OrderID = 10248",
+    "show all orders with their details": "SELECT Orders.OrderID, Orders.OrderDate, Customers.CustomerName FROM Orders JOIN Customers ON Orders.CustomerID = Customers.CustomerID",
+    "get total sales for each category": "SELECT Categories.CategoryName, SUM(OrderDetails.Quantity * OrderDetails.UnitPrice) AS TotalSales FROM OrderDetails JOIN Products ON OrderDetails.ProductID = Products.ProductID JOIN Categories ON Products.CategoryID = Categories.CategoryID GROUP BY Categories.CategoryName",
+
+    "how many tables do I have": "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'",
+    "how many products do I have": "SELECT COUNT(*) FROM Products"
 }
   
