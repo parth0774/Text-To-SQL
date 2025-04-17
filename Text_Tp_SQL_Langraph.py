@@ -3,32 +3,27 @@ from config import DB_CONNECTION_STRING, OPENAI_API_KEY
 import os
 import logging
 from datetime import datetime
-from typing import Any
+from typing import Annotated
+from langchain_core.messages import AIMessage
+from pydantic import BaseModel, Field
+from typing_extensions import TypedDict
+from langgraph.graph import END, StateGraph, START
+from langgraph.graph.message import AnyMessage, add_messages
+from typing import Any, Union, Literal
 from langchain_core.messages import ToolMessage
 from langchain_core.runnables import RunnableLambda, RunnableWithFallbacks
 from langgraph.prebuilt import ToolNode
 from langchain_community.agent_toolkits import SQLDatabaseToolkit
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import tool
-from langchain_core.prompts import ChatPromptTemplate
-from typing import Annotated, Literal
-from langchain_core.messages import AIMessage
-from pydantic import BaseModel, Field
-from typing_extensions import TypedDict
-from langgraph.graph import END, StateGraph, START
-from langgraph.graph.message import AnyMessage, add_messages
+
 
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
+
 logging.info("Initializing database connection...")
 db = SQLDatabase.from_uri(DB_CONNECTION_STRING)
 logging.info(f"Database dialect: {db.dialect}")
 logging.info(f"Available tables: {db.get_usable_table_names()}")
-
-toolkit = SQLDatabaseToolkit(db=db, llm=ChatOpenAI(model="gpt-4"))
-tools = toolkit.get_tools()
-
-list_tables_tool = next(tool for tool in tools if tool.name == "sql_db_list_tables")
-get_schema_tool = next(tool for tool in tools if tool.name == "sql_db_schema")
 
 def create_tool_node_with_fallback(tools: list) -> RunnableWithFallbacks[Any, dict]:
     return ToolNode(tools).with_fallbacks(
@@ -48,13 +43,14 @@ def handle_tool_error(state) -> dict:
         ]
     }
 
+toolkit = SQLDatabaseToolkit(db=db, llm=ChatOpenAI(model="gpt-4"))
+tools = toolkit.get_tools()
+
+list_tables_tool = next(tool for tool in tools if tool.name == "sql_db_list_tables")
+get_schema_tool = next(tool for tool in tools if tool.name == "sql_db_schema")
+
 @tool
 def db_query_tool(query: str) -> str:
-    """
-    Execute a SQL query against the database and get back the result.
-    If the query is not correct, an error message will be returned.
-    If an error is returned, rewrite the query, check the query, and try again.
-    """
     logging.info(f"Executing query: {query}")
     result = db.run_no_throw(query)
     if not result:
@@ -62,6 +58,9 @@ def db_query_tool(query: str) -> str:
         return "Error: Query failed. Please rewrite your query and try again."
     logging.info("Query executed successfully")
     return result
+
+
+from langchain_core.prompts import ChatPromptTemplate
 
 query_check_system = """You are a SQL expert with a strong attention to detail.
 Double check the SQL Server query for common mistakes, including:
@@ -107,13 +106,11 @@ def first_tool_call(state: State) -> dict[str, list[AIMessage]]:
         ]
     }
 
-
 def model_check_query(state: State) -> dict[str, list[AIMessage]]:
     logging.info("Validating query...")
     result = query_check.invoke({"messages": [state["messages"][-1]]})
     logging.info(f"Query validation result: {result}")
     return {"messages": [result]}
-
 
 workflow.add_node("first_tool_call", first_tool_call)
 
@@ -133,6 +130,8 @@ workflow.add_node(
 )
 
 class SubmitFinalAnswer(BaseModel):
+    """Submit the final answer to the user based on the query results."""
+
     final_answer: str = Field(..., description="The final answer to the user")
 
 query_gen_system = """You are a SQL expert with a strong attention to detail.
@@ -164,9 +163,9 @@ query_gen = query_gen_prompt | ChatOpenAI(model="gpt-4", temperature=0).bind_too
     [SubmitFinalAnswer]
 )
 
-
 def query_gen_node(state: State):
     message = query_gen.invoke(state)
+
     tool_messages = []
     if message.tool_calls:
         for tc in message.tool_calls:
@@ -188,16 +187,6 @@ workflow.add_node("correct_query", model_check_query)
 
 workflow.add_node("execute_query", create_tool_node_with_fallback([db_query_tool]))
 
-def should_continue(state: State) -> Literal["END", "correct_query", "query_gen"]:
-    messages = state["messages"]
-    last_message = messages[-1]
-    if getattr(last_message, "tool_calls", None):
-        return "END"
-    if last_message.content.startswith("Error:"):
-        return "query_gen"
-    else:
-        return "correct_query"
-    
 def should_continue(state: State) -> str:
     messages = state["messages"]
     last_message = messages[-1]
@@ -223,6 +212,7 @@ workflow.add_edge("execute_query", "query_gen")
 app = workflow.compile()
 
 def run_query(question: str):
+
     logging.info(f"Processing question: {question}")
     messages = app.invoke({"messages": [("user", question)]})
     
@@ -230,6 +220,7 @@ def run_query(question: str):
     logging.info(f"Final message content: {final_message.content}")
     
     answer = None
+    sql_query = None
 
     if final_message.tool_calls:
         logging.info("Tool calls found in final message")
@@ -238,7 +229,6 @@ def run_query(question: str):
         logging.info("No tool calls found, returning content directly")
         answer = final_message.content
     
-    sql_query = None
     for msg in messages["messages"]:
         if hasattr(msg, 'tool_calls') and msg.tool_calls:
             for call in msg.tool_calls:
@@ -246,17 +236,21 @@ def run_query(question: str):
                     sql_query = call["args"]["query"]
                     break
     
-    print(f"SQL Query: {sql_query}")
-    print(f"Answer: {answer}")
+    formatted_answer = f"Answer: {answer}\n\nSQL Query:\n{sql_query}"
     
-    return answer, final_message
+    current_log_file = f'sql_agent_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'
+    
+    logs = []
+    try:
+        with open(current_log_file, 'r') as log_file:
+            logs = log_file.readlines()
+    except Exception as e:
+        logging.error(f"Error reading log file: {str(e)}")
+    
+    return formatted_answer, final_message, logs
 
 if __name__ == "__main__":
     question = "provide me information on order details?"
     logging.info(f"Starting query execution for question: {question}")
     result = run_query(question)
     logging.info("Query execution completed")
-
-
-
-
