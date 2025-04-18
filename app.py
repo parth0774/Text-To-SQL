@@ -9,7 +9,6 @@ from langchain.callbacks.manager import CallbackManager
 
 app = Flask(__name__)
 
-# Configure logging with a single log file
 LOG_FILE = 'sql_agent.log'
 logging.basicConfig(
     level=logging.INFO,
@@ -25,7 +24,6 @@ client = Client(
     api_url=os.getenv("LANGSMITH_ENDPOINT")
 )
 
-# Configure LangSmith tracing
 tracer = LangChainTracer(
     project_name=os.getenv("LANGSMITH_PROJECT")
 )

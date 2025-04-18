@@ -1,2 +1,0 @@
-2025-04-17 02:07:52,282 - INFO - Log history cleared.
-2025-04-17 02:07:52,283 - INFO - 127.0.0.1 - - [17/Apr/2025 02:07:52] "POST /clear_history HTTP/1.1" 200 -

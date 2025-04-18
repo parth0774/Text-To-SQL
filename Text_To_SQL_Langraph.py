@@ -21,7 +21,6 @@ from pydantic import BaseModel, Field
 
 from config import DB_CONNECTION_STRING, OPENAI_API_KEY, LANGSMITH_API_KEY, LANGSMITH_ENDPOINT, LANGSMITH_PROJECT
 
-# Set environment variables for LangSmith
 os.environ["LANGCHAIN_TRACING_V2"] = "true"
 os.environ["LANGCHAIN_ENDPOINT"] = LANGSMITH_ENDPOINT
 os.environ["LANGCHAIN_API_KEY"] = LANGSMITH_API_KEY
@@ -31,13 +30,11 @@ os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 
 SQL_LOG_FILE = 'sql_log.json'
 
-# Initialize LangSmith client with config values
 client = Client(
     api_key=LANGSMITH_API_KEY,
     api_url=LANGSMITH_ENDPOINT
 )
 
-# Configure LangSmith tracing
 tracer = LangChainTracer(
     project_name=LANGSMITH_PROJECT
 )

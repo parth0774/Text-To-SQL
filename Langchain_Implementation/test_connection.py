@@ -11,7 +11,6 @@ def test_connection():
             print("Connection successful!")
             print(f"Query execution time: {time.time() - start_time:.2f} seconds")
             
-            # Test table access
             print("\nTesting table access...")
             tables = conn.execute(text("""
                 SELECT TABLE_NAME 

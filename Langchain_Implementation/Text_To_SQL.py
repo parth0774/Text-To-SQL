@@ -26,7 +26,6 @@ def init_sql_agent():
     
     return agent
 
-# Run a query
 def run_query(question):
     try:
         agent = init_sql_agent()
@@ -35,7 +34,6 @@ def run_query(question):
     except Exception as e:
         return f"Error: {str(e)}"
 
-# Example usage
 if __name__ == "__main__":
     questions = [
         "How many entries we have in Customers table?",
