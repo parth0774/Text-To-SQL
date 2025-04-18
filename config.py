@@ -1,17 +1,17 @@
 DB_CONFIG = {
-    'username': 'admin', 
-    'password': 'UPZLcrTX3n9XVb3&',
-    'host': 'northwind.cfamiqo2obcc.us-east-2.rds.amazonaws.com',
-    'database': 'Northwind'
+    'username': 'add-your-username-here', 
+    'password': 'add-password-here',
+    'host': 'add-your-host-here',
+    'database': 'add-your-database-name-here',
 }
 
-OPENAI_API_KEY = "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"
+OPENAI_API_KEY = "add-your-openai-api-key-here"
 DB_CONNECTION_STRING = f"mssql+pymssql://{DB_CONFIG['username']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}/{DB_CONFIG['database']}"
 
-LANGSMITH_API_KEY="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"
+LANGSMITH_API_KEY="add-your-langsith-api-key-here"
 LANGSMITH_TRACING="true"
 LANGSMITH_ENDPOINT="https://api.smith.langchain.com"
-LANGSMITH_PROJECT="Text-SQL-Agent" 
+LANGSMITH_PROJECT="add-your-project-name-here" 
 
 SCHEMA_INFO = """
 The database contains the following tables:

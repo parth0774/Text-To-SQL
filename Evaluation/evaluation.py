@@ -9,10 +9,10 @@ import numpy as np
 from collections import defaultdict
 
 DB_CONFIG = {
-    'username': 'admin',
-    'password': 'UPZLcrTX3n9XVb3&',
-    'host': 'northwind.cfamiqo2obcc.us-east-2.rds.amazonaws.com',
-    'database': 'Northwind'
+    'username': 'add-your-username-here', 
+    'password': 'add-password-here',
+    'host': 'add-your-host-here',
+    'database': 'add-your-database-name-here',
 }
 
 quoted_password = quote_plus(DB_CONFIG['password'])
