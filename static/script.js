@@ -42,9 +42,30 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
 
             if (response.ok) {
-                answerDiv.textContent = data.answer;
-                resultDiv.classList.remove('hidden');
-                addLogMessage('Query processed successfully');
+                // Split the response into SQL query and results
+                const responseText = data.answer;
+                const sqlQueryMatch = responseText.match(/SQL Query:\n([\s\S]*?)\n\nResults/);
+                const resultsMatch = responseText.match(/Results \(Page \d+\):\n-{80}\n([\s\S]*?)\n-{80}/);
+
+                if (sqlQueryMatch && resultsMatch) {
+                    const sqlQuery = sqlQueryMatch[1].trim();
+                    const results = resultsMatch[1].trim();
+
+                    // Display SQL query
+                    document.getElementById('sqlQuery').textContent = sqlQuery;
+                    
+                    // Format and display results
+                    const formattedResults = formatResults(results);
+                    document.getElementById('answer').innerHTML = formattedResults;
+                    
+                    resultDiv.classList.remove('hidden');
+                    addLogMessage('Query processed successfully');
+                } else {
+                    // Fallback if the format doesn't match
+                    document.getElementById('answer').textContent = responseText;
+                    resultDiv.classList.remove('hidden');
+                }
+
                 // Display logs
                 if (data.logs && Array.isArray(data.logs)) {
                     data.logs.forEach(log => addLogMessage(log, 'info'));
@@ -59,6 +80,28 @@ document.addEventListener('DOMContentLoaded', function() {
             submitBtn.disabled = false;
             submitBtn.textContent = 'Submit Query';
         }
+    }
+
+    // Helper function to format results
+    function formatResults(results) {
+        // Split results into individual records
+        const records = results.split('\n\n');
+        
+        // Format each record
+        return records.map((record, index) => {
+            // Split record into lines
+            const lines = record.split('\n');
+            
+            // Create a formatted record
+            return `
+                <div class="record">
+                    <div class="record-number">${index + 1}.</div>
+                    <div class="record-content">
+                        ${lines.map(line => `<div class="record-line">${line}</div>`).join('')}
+                    </div>
+                </div>
+            `;
+        }).join('');
     }
 
     // Function to clear history

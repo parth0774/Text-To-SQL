@@ -1,6 +1,6 @@
 # Query-To-SQL
 
-A sophisticated Natural Language to SQL query conversion system built with LangGraph, LangChain, and Flask. This project enables seamless conversion of natural language questions into SQL queries and their execution against a database, with robust error handling and performance optimization.
+A  Natural Language to SQL query conversion system built with LangGraph, LangChain and Flask. This project enables seamless conversion of natural language questions into SQL queries and their execution against a database, with robust error handling and performance optimization.
 
 ## System Architecture
 

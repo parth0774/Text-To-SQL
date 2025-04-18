@@ -36,10 +36,62 @@
     color: #d97706;
 }
 
-/* Result styling */
+/* SQL Query display */
+#sqlQuery {
+    font-family: 'Courier New', Courier, monospace;
+    white-space: pre;
+    overflow-x: auto;
+    padding: 1rem;
+    margin: 0.5rem 0;
+    border-radius: 0.5rem;
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+}
+
+/* Results display */
 #answer {
+    font-family: 'Courier New', Courier, monospace;
     white-space: pre-wrap;
     word-break: break-word;
+    padding: 1rem;
+    margin: 0.5rem 0;
+    border-radius: 0.5rem;
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    line-height: 1.5;
+}
+
+/* Record styling */
+.record {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background-color: #2a2a2a;
+    border-radius: 0.5rem;
+    border: 1px solid #444;
+}
+
+.record-number {
+    font-weight: bold;
+    color: #64b5f6;
+    margin-bottom: 0.5rem;
+}
+
+.record-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.record-line {
+    padding-left: 1rem;
+    border-left: 2px solid #444;
+}
+
+/* Result section headers */
+#result h2 {
+    color: #64b5f6;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
 }
 
 /* Loading animation */
@@ -49,8 +101,9 @@
     height: 20px;
     border: 3px solid rgba(0, 0, 0, 0.1);
     border-radius: 50%;
-    border-top-color: #2563eb;
+    border-top-color: #64b5f6;
     animation: spin 1s ease-in-out infinite;
+    margin-right: 0.5rem;
 }
 
 @keyframes spin {

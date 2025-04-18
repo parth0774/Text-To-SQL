@@ -79,7 +79,7 @@ def handle_tool_error(state) -> dict:
         ]
     }
 
-toolkit = SQLDatabaseToolkit(db=db, llm=ChatOpenAI(model="gpt-4o-mini"))
+toolkit = SQLDatabaseToolkit(db=db, llm=ChatOpenAI(model="gpt-4", temperature=0.1))
 tools = toolkit.get_tools()
 
 list_tables_tool = next(tool for tool in tools if tool.name == "sql_db_list_tables")
@@ -88,37 +88,62 @@ get_schema_tool = next(tool for tool in tools if tool.name == "sql_db_schema")
 @tool
 def db_query_tool(query: str) -> str:
     """
-    Execute a SQL query against the database and get back the result.
-    If the query is not correct, an error message will be returned.
-    If an error is returned, rewrite the query, check the query, and try again.
+    Execute a SQL query against the database and return the raw result.
+    If the query fails, return a detailed error message.
     """
-    result = db.run_no_throw(query)
-    if not result:
-        return "Error: Query failed. Please rewrite your query and try again."
-    return result
+    try:
+        result = db.run_no_throw(query)
+        if not result:
+            return "Error: Query returned no results."
+        return result
+    except Exception as e:
+        return f"SQL Error: {str(e)}"
 
-query_check_system = """You are a SQL expert with a strong attention to detail.
-Double check the SQL Server query for common mistakes, including:
-- Using NOT IN with NULL values
-- Using UNION when UNION ALL should have been used
-- Using BETWEEN for exclusive ranges
-- Data type mismatch in predicates
-- Properly quoting identifiers
-- Using the correct number of arguments for functions
-- Casting to the correct data type
-- Using the proper columns for joins
-- Using proper SQL Server syntax (e.g., TOP instead of LIMIT)
+def analyze_query_error(error_message: str) -> str:
+    error_lower = error_message.lower()
+    if "syntax" in error_lower:
+        return "The query has a syntax error. Please check the SQL syntax and try again."
+    elif "invalid column" in error_lower:
+        return "One or more columns in the query don't exist. Please check the column names."
+    elif "invalid object" in error_lower:
+        return "One or more tables in the query don't exist. Please check the table names."
+    elif "ambiguous column" in error_lower:
+        return "There are ambiguous column names in the query. Please specify the table name for ambiguous columns."
+    return "The query failed. Please check the query structure and try again."
 
-If there are any of the above mistakes, rewrite the query. If there are no mistakes, just reproduce the original query.
+def should_retry_query(error_message: str) -> bool:
+    return "Error:" in error_message or "SQL Error:" in error_message
 
-You will call the appropriate tool to execute the query after running this check."""
+query_gen_system = """You are a SQL expert. Your ONLY task is to convert natural language questions into SQL Server queries.
 
-query_check_prompt = ChatPromptTemplate.from_messages(
-    [("system", query_check_system), ("placeholder", "{messages}")]
+You have access to the database schema. Use it to generate accurate SQL queries.
+
+IMPORTANT:
+1. You MUST output ONLY the SQL query
+2. The query MUST start with SELECT
+3. Do NOT add any explanations, comments, or formatting
+4. Do NOT use any tools or function calls
+5. Just output the raw SQL query
+
+Rules for SQL generation:
+1. Always use proper SQL Server syntax
+2. Use table aliases in joins
+3. Quote string literals with single quotes
+4. Use proper column names from the schema
+5. Include only necessary columns
+6. Handle NULL values appropriately
+7. Use proper data types in conditions
+
+Remember:
+- Output ONLY the SQL query
+- Query MUST start with SELECT
+- No explanations or formatting
+- No tools or function calls"""
+
+query_gen_prompt = ChatPromptTemplate.from_messages(
+    [("system", query_gen_system), ("placeholder", "{messages}")]
 )
-query_check = query_check_prompt | ChatOpenAI(model="gpt-4", temperature=0).bind_tools(
-    [db_query_tool], tool_choice="required"
-)
+query_gen = query_gen_prompt | ChatOpenAI(model="gpt-4", temperature=0)
 
 class State(TypedDict):
     messages: Annotated[list[AnyMessage], add_messages]
@@ -126,130 +151,93 @@ class State(TypedDict):
 workflow = StateGraph(State)
 
 def first_tool_call(state: State) -> dict[str, list[AIMessage]]:
+    schema = db.get_table_info()
     return {
         "messages": [
-            AIMessage(
-                content="",
-                tool_calls=[
-                    {
-                        "name": "sql_db_list_tables",
-                        "args": {},
-                        "id": "tool_abcd123",
-                    }
-                ],
-            )
+            AIMessage(content=f"Database Schema:\n{schema}\n\nPlease generate a SQL query for the user's question.")
         ]
     }
 
-def model_check_query(state: State) -> dict[str, list[AIMessage]]:
-    result = query_check.invoke({"messages": [state["messages"][-1]]})
-    return {"messages": [result]}
-
-workflow.add_node("first_tool_call", first_tool_call)
-workflow.add_node("list_tables_tool", create_tool_node_with_fallback([list_tables_tool]))
-workflow.add_node("get_schema_tool", create_tool_node_with_fallback([get_schema_tool]))
-
-model_get_schema = ChatOpenAI(model="gpt-4", temperature=0).bind_tools([get_schema_tool])
-workflow.add_node(
-    "model_get_schema",
-    lambda state: {
-        "messages": [model_get_schema.invoke(state["messages"])],
-    },
-)
-
-class SubmitFinalAnswer(BaseModel):
-    final_answer: str = Field(..., description="The final answer to the user")
-
-query_gen_system = """You are a SQL expert with a strong attention to detail.
-
-Given an input question, output a syntactically correct SQL Server query to run, then look at the results of the query and return the answer.
-
-DO NOT call any tool besides SubmitFinalAnswer to submit the final answer.
-
-When generating the query:
-
-Output the SQL query that answers the input question without a tool call.
-
-Unless the user specifies a specific number of examples they wish to obtain, always limit your query to at most 5 results using TOP.
-You can order the results by a relevant column to return the most interesting examples in the database.
-Never query for all the columns from a specific table, only ask for the relevant columns given the question.
-
-If you get an error while executing a query, rewrite the query and try again.
-
-If you get an empty result set, you should try to rewrite the query to get a non-empty result set. 
-NEVER make stuff up if you don't have enough information to answer the query... just say you don't have enough information.
-
-If you have enough information to answer the input question, simply invoke the appropriate tool to submit the final answer to the user.
-
-DO NOT make any DML statements (INSERT, UPDATE, DELETE, DROP etc.) to the database."""
-
-query_gen_prompt = ChatPromptTemplate.from_messages(
-    [("system", query_gen_system), ("placeholder", "{messages}")]
-)
-query_gen = query_gen_prompt | ChatOpenAI(model="gpt-4", temperature=0).bind_tools([SubmitFinalAnswer])
-
 def query_gen_node(state: State):
-    message = query_gen.invoke(state)
-    tool_messages = []
-    if message.tool_calls:
-        for tc in message.tool_calls:
-            if tc["name"] != "SubmitFinalAnswer":
-                tool_messages.append(
-                    ToolMessage(
-                        content=f"Error: The wrong tool was called: {tc['name']}. Please fix your mistakes. Remember to only call SubmitFinalAnswer to submit the final answer. Generated queries should be outputted WITHOUT a tool call.",
-                        tool_call_id=tc["id"],
-                    )
-                )
-    else:
-        tool_messages = []
-    return {"messages": [message] + tool_messages}
-
-workflow.add_node("query_gen", query_gen_node)
-workflow.add_node("correct_query", model_check_query)
-workflow.add_node("execute_query", create_tool_node_with_fallback([db_query_tool]))
+    messages = state["messages"]
+    user_question = messages[0].content if isinstance(messages[0], str) else messages[0].content
+    schema_info = messages[1].content if len(messages) > 1 else ""
+    response = query_gen.invoke({"messages": [
+        ("system", f"Database Schema:\n{schema_info}"),
+        ("user", user_question)
+    ]})
+    sql_query = response.content.strip()
+    
+    # Validate that it's a SQL query
+    if not sql_query.upper().startswith('SELECT'):
+        return {
+            "messages": [
+                AIMessage(content="Error: Generated response is not a valid SQL query. Please try again.")
+            ]
+        }
+    
+    return {"messages": [AIMessage(content=sql_query)]}
 
 def should_continue(state: State) -> str:
     messages = state["messages"]
     last_message = messages[-1]
-    if getattr(last_message, "tool_calls", None):
+    
+    if last_message.content and last_message.content.strip().upper().startswith('SELECT'):
         return END
-    if last_message.content.startswith("Error:"):
+    
+    if last_message.content and ("Error:" in last_message.content or "SQL Error:" in last_message.content):
         return "query_gen"
-    else:
-        return "correct_query"
+    
+    return END
+
+workflow.add_node("first_tool_call", first_tool_call)
+workflow.add_node("query_gen", query_gen_node)
 
 workflow.add_edge(START, "first_tool_call")
-workflow.add_edge("first_tool_call", "list_tables_tool")
-workflow.add_edge("list_tables_tool", "model_get_schema")
-workflow.add_edge("model_get_schema", "get_schema_tool")
-workflow.add_edge("get_schema_tool", "query_gen")
+workflow.add_edge("first_tool_call", "query_gen")
 workflow.add_conditional_edges("query_gen", should_continue)
-workflow.add_edge("correct_query", "execute_query")
-workflow.add_edge("execute_query", "query_gen")
 
 app = workflow.compile()
 
-def run_query(question: str):
+def run_query(question: str, max_retries: int = 3):
     try:
-        messages = app.invoke({"messages": [("user", question)]})
-        final_message = messages["messages"][-1]
-        answer = None
-        sql_query = None
+        retry_count = 0
+        last_error = None
+        
+        while retry_count < max_retries:
+            messages = app.invoke({"messages": [("user", question)]})
+            final_message = messages["messages"][-1]
+            
+            if not final_message.content:
+                return "Error: Failed to generate SQL query", None, []
+            
+            sql_query = final_message.content.strip()
+            
+            if not sql_query.upper().startswith('SELECT'):
+                return "Error: Generated response is not a valid SQL query", None, []
+            
+            result = db_query_tool.invoke(sql_query)
+            
+            if not should_retry_query(result):
+                log_to_json(question, sql_query, result)
+                
+                formatted_response = f"""SQL Query:
+{sql_query}
 
-        if final_message.tool_calls:
-            answer = final_message.tool_calls[0]["args"]["final_answer"]
-        else:
-            answer = final_message.content
+Results:
+{result}"""
+                return formatted_response, None, []
+            
+            last_error = analyze_query_error(result)
+            retry_count += 1
+            
+            if retry_count < max_retries:
+                question = f"{question}\nPrevious error: {last_error}\nPlease fix the SQL query and try again."
         
-        for msg in messages["messages"]:
-            if hasattr(msg, 'tool_calls') and msg.tool_calls:
-                for call in msg.tool_calls:
-                    if call["name"] == 'db_query_tool':
-                        sql_query = call["args"]["query"]
-                        break
+        error_message = f"Failed after {max_retries} attempts. Last error: {last_error}"
+        log_to_json(question, sql_query, error_message)
+        return error_message, None, [error_message]
         
-        log_to_json(question, sql_query, answer)
-        return f"Answer: {answer}\n\nSQL Query:\n{sql_query}", final_message, []
     except Exception as e:
         error_message = f"Error processing query: {str(e)}"
         log_to_json(question, "", error_message)

@@ -1,0 +1,12 @@
+2025-04-18 15:33:02,024 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-04-18 15:33:02,024 - INFO - [33mPress CTRL+C to quit[0m
+2025-04-18 15:33:02,032 - INFO -  * Restarting with watchdog (windowsapi)
+2025-04-18 15:33:43,052 - WARNING -  * Debugger is active!
+2025-04-18 15:33:43,071 - INFO -  * Debugger PIN: 589-502-110
+2025-04-18 15:33:43,106 - INFO - 127.0.0.1 - - [18/Apr/2025 15:33:43] "GET / HTTP/1.1" 200 -
+2025-04-18 15:33:43,213 - INFO - 127.0.0.1 - - [18/Apr/2025 15:33:43] "[36mGET /static/script.js HTTP/1.1[0m" 304 -
+2025-04-18 15:34:02,259 - INFO - Processing question: Which customers have spent the most money, and how much did each spend in total?
+2025-04-18 15:34:05,585 - INFO - Retrying request to /chat/completions in 0.398323 seconds
+2025-04-18 15:34:09,730 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-04-18 15:34:35,048 - INFO - 127.0.0.1 - - [18/Apr/2025 15:34:35] "POST /query HTTP/1.1" 200 -
